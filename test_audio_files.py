@@ -1,15 +1,25 @@
-# Example usage for single file
-from src.speech_recognition import SpeechHandler
+# Run it with a single file
+from src.speech_recognition import process_single_file
 
-handler = SpeechHandler()
+# Process a single file
+result = process_single_file("data/raw/old-radio-227880.mp3")
 
-# Process single file
-result = handler.process_audio_file("path/to/your/audio.mp3")
-print(f"Transcription: {result['transcription']}")
+# Check result
+if result['success']:
+    print(f"Transcription: {result['transcription']}")
+else:
+    print(f"Error: {result['error']}")
 
-# # Process all audio files in a directory
-# results = handler.process_directory("path/to/audio/files")
-# for result in results:
-#     if 'error' not in result:
-#         print(f"File: {result['original_file']}")
-#         print(f"Transcription: {result['transcription']}\n")
+# Or process a directory
+from src.speech_recognition import process_directory
+
+# Process all files in a directory
+results = process_directory("data/raw")
+
+# Check results
+for result in results:
+    if result['success']:
+        print(f"File: {result['original_file']}")
+        print(f"Transcription: {result['transcription']}")
+    else:
+        print(f"Error with {result['original_file']}: {result['error']}")
