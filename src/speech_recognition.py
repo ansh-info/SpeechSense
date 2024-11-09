@@ -1,101 +1,88 @@
+# Updated speech_recognition.py
 import speech_recognition as sr
-import pyaudio
-import wave
-import os
-from datetime import datetime
 from . import config
+from .audio_file_handler import AudioFileHandler
 
 class SpeechHandler:
     def __init__(self):
         self.recognizer = sr.Recognizer()
         self.microphone = sr.Microphone()
-        
-    def record_audio(self, duration=None):
-        """Record audio from microphone."""
-        if duration is None:
-            duration = config.RECORD_SECONDS
-            
-        # Initialize PyAudio
-        audio = pyaudio.PyAudio()
-        
-        # Open stream
-        stream = audio.open(
-            format=pyaudio.paInt16,
-            channels=config.CHANNELS,
-            rate=config.SAMPLE_RATE,
-            input=True,
-            frames_per_buffer=config.CHUNK_SIZE
-        )
-        
-        print("Recording...")
-        frames = []
-        
-        for _ in range(0, int(config.SAMPLE_RATE / config.CHUNK_SIZE * duration)):
-            data = stream.read(config.CHUNK_SIZE)
-            frames.append(data)
-            
-        print("Recording finished.")
-        
-        # Stop and close the stream
-        stream.stop_stream()
-        stream.close()
-        audio.terminate()
-        
-        # Save the recorded audio
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        filename = os.path.join(config.RAW_DATA_DIR, f"recording_{timestamp}.wav")
-        
-        with wave.open(filename, 'wb') as wf:
-            wf.setnchannels(config.CHANNELS)
-            wf.setsampwidth(audio.get_sample_size(pyaudio.paInt16))
-            wf.setframerate(config.SAMPLE_RATE)
-            wf.writeframes(b''.join(frames))
-            
-        return filename
+        self.audio_handler = AudioFileHandler()
     
-    def transcribe_file(self, audio_file_path):
-        """Transcribe audio file using Google's Speech Recognition."""
+    def process_audio_file(self, file_path):
+        """Process a single audio file and return its transcription."""
         try:
-            with sr.AudioFile(audio_file_path) as source:
-                audio_data = self.recognizer.record(source)
-                text = self.recognizer.recognize_google(audio_data)
-                return text
-        except sr.UnknownValueError:
-            return "Speech recognition could not understand the audio"
-        except sr.RequestError as e:
-            return f"Could not request results from service; {str(e)}"
+            # Convert to WAV if needed
+            wav_file = self.audio_handler.convert_to_wav(file_path)
+            
+            # Transcribe
+            transcription = self.transcribe_file(wav_file)
+            
+            # Save transcription
+            transcript_file = self.save_transcription(transcription, wav_file)
+            
+            return {
+                'original_file': file_path,
+                'wav_file': wav_file,
+                'transcription': transcription,
+                'transcript_file': transcript_file
+            }
+            
+        except Exception as e:
+            return {
+                'original_file': file_path,
+                'error': str(e)
+            }
     
-    def save_transcription(self, text, original_filename):
-        """Save transcribed text to file."""
-        basename = os.path.splitext(os.path.basename(original_filename))[0]
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_filename = os.path.join(
-            config.TRANSCRIPTIONS_DIR,
-            f"{basename}_transcript_{timestamp}.txt"
-        )
+    def process_directory(self, directory_path):
+        """Process all supported audio files in a directory."""
+        results = []
         
-        with open(output_filename, 'w', encoding='utf-8') as f:
-            f.write(text)
-        return output_filename
+        for root, _, files in os.walk(directory_path):
+            for file in files:
+                file_path = os.path.join(root, file)
+                if self.audio_handler.is_supported_format(file_path):
+                    result = self.process_audio_file(file_path)
+                    results.append(result)
+        
+        return results
 
-# Create a test script: test_speech_recognition.py
-def main():
-    # Initialize the speech handler
-    speech_handler = SpeechHandler()
+def process_single_file():
+    handler = SpeechHandler()
     
-    # Record audio
-    print("Starting audio recording...")
-    audio_file = speech_handler.record_audio(duration=5)  # 5 seconds recording
-    print(f"Audio saved to: {audio_file}")
+    # Replace with your audio file path
+    file_path = "file.mp3"
     
-    # Transcribe the recorded audio
-    print("Transcribing audio...")
-    transcription = speech_handler.transcribe_file(audio_file)
-    print(f"Transcription: {transcription}")
+    result = handler.process_audio_file(file_path)
     
-    # Save transcription
-    transcript_file = speech_handler.save_transcription(transcription, audio_file)
-    print(f"Transcription saved to: {transcript_file}")
+    if 'error' in result:
+        print(f"Error processing file: {result['error']}")
+    else:
+        print(f"Original file: {result['original_file']}")
+        print(f"Transcription: {result['transcription']}")
+        print(f"Transcript saved to: {result['transcript_file']}")
+
+def process_directory():
+    handler = SpeechHandler()
+    
+    # Replace with your directory path containing audio files
+    directory_path = "files"
+    
+    results = handler.process_directory(directory_path)
+    
+    for result in results:
+        if 'error' in result:
+            print(f"Error processing {result['original_file']}: {result['error']}")
+        else:
+            print(f"\nProcessed: {result['original_file']}")
+            print(f"Transcription: {result['transcription']}")
+            print(f"Transcript saved to: {result['transcript_file']}")
 
 if __name__ == "__main__":
-    main()
+    # Test single file
+    print("Processing single file:")
+    process_single_file()
+    
+    # Test directory
+    print("\nProcessing directory:")
+    process_directory()
