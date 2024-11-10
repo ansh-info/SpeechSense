@@ -1,12 +1,10 @@
-from textblob import TextBlob
-from sumy.parsers.plaintext import PlaintextParser
-from sumy.nlp.tokenizers import Tokenizer
-from sumy.summarizers.lsa import LsaSummarizer
-from sumy.nlp.stemmers import Stemmer
-from sumy.utils import get_stop_words
+import nltk
+from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.sentiment import SentimentIntensityAnalyzer
+from nltk.corpus import stopwords
+from nltk.tokenize import word_tokenize
 from sklearn.feature_extraction.text import CountVectorizer
 from sklearn.decomposition import LatentDirichletAllocation
-import nltk
 import os
 from datetime import datetime
 
@@ -14,42 +12,78 @@ class NLPProcessor:
     def __init__(self):
         # Download required NLTK data
         try:
-            nltk.data.find('tokenizers/punkt')
-        except LookupError:
             nltk.download('punkt')
-            nltk.download('averaged_perceptron_tagger')
             nltk.download('stopwords')
+            nltk.download('vader_lexicon')
+        except:
+            pass
+        
+        self.sia = SentimentIntensityAnalyzer()
+        self.stop_words = set(stopwords.words('english'))
     
     def analyze_sentiment(self, text):
         """
-        Analyze the sentiment of the text.
-        Returns: polarity (-1 to 1) and subjectivity (0 to 1)
+        Analyze the sentiment of the text using NLTK's VADER sentiment analyzer.
         """
-        blob = TextBlob(text)
+        scores = self.sia.polarity_scores(text)
+        
+        # Determine overall sentiment
+        compound = scores['compound']
+        if compound >= 0.05:
+            sentiment = 'positive'
+        elif compound <= -0.05:
+            sentiment = 'negative'
+        else:
+            sentiment = 'neutral'
+            
         return {
-            'polarity': blob.sentiment.polarity,
-            'subjectivity': blob.sentiment.subjectivity,
-            'sentiment': 'positive' if blob.sentiment.polarity > 0 
-                        else 'negative' if blob.sentiment.polarity < 0 
-                        else 'neutral'
+            'sentiment': sentiment,
+            'polarity': compound,
+            'subjectivity': abs(compound),  # Using absolute compound score as subjectivity
+            'scores': scores
         }
     
-    def generate_summary(self, text, sentences_count=3):
+    def generate_summary(self, text, num_sentences=3):
         """
-        Generate a summary of the text using LSA (Latent Semantic Analysis).
+        Generate a summary by selecting the most important sentences.
+        Uses a simple frequency-based approach.
         """
         try:
-            # Initialize the summarizer
-            parser = PlaintextParser.from_string(text, Tokenizer("english"))
-            stemmer = Stemmer("english")
-            summarizer = LsaSummarizer(stemmer)
-            summarizer.stop_words = get_stop_words("english")
-
-            # Summarize the text
-            summary_sentences = summarizer(parser.document, sentences_count)
-            summary = " ".join([str(sentence) for sentence in summary_sentences])
+            # Tokenize the text into sentences
+            sentences = sent_tokenize(text)
             
-            return summary
+            # If text is short, return it as is
+            if len(sentences) <= num_sentences:
+                return text
+                
+            # Tokenize words and remove stopwords
+            words = word_tokenize(text.lower())
+            word_freq = {}
+            
+            for word in words:
+                if word.isalnum() and word not in self.stop_words:
+                    word_freq[word] = word_freq.get(word, 0) + 1
+            
+            # Score sentences based on word frequency
+            sentence_scores = {}
+            for sentence in sentences:
+                score = 0
+                for word in word_tokenize(sentence.lower()):
+                    if word in word_freq:
+                        score += word_freq[word]
+                sentence_scores[sentence] = score
+            
+            # Get top sentences
+            summary_sentences = sorted(sentence_scores.items(), 
+                                    key=lambda x: x[1], 
+                                    reverse=True)[:num_sentences]
+            
+            # Maintain original order of sentences
+            summary_sentences = sorted(summary_sentences, 
+                                    key=lambda x: sentences.index(x[0]))
+            
+            return ' '.join(sent for sent, score in summary_sentences)
+            
         except Exception as e:
             return f"Could not generate summary: {str(e)}"
     
@@ -91,28 +125,24 @@ class NLPProcessor:
     
     def extract_key_phrases(self, text):
         """
-        Extract key phrases using NLTK's part-of-speech tagging.
+        Extract key phrases using simple frequency-based approach.
         """
-        blob = TextBlob(text)
-        phrases = []
-        
-        for sentence in blob.sentences:
-            tagged_words = sentence.tags
+        try:
+            words = word_tokenize(text.lower())
+            phrases = []
             
-            # Extract noun phrases
-            current_phrase = []
-            for word, tag in tagged_words:
-                if tag.startswith(('JJ', 'NN')):  # Adjectives and Nouns
-                    current_phrase.append(word)
-                else:
-                    if current_phrase:
-                        phrases.append(' '.join(current_phrase))
-                        current_phrase = []
-                        
-            if current_phrase:
-                phrases.append(' '.join(current_phrase))
-        
-        return list(set(phrases))  # Remove duplicates
+            # Get word frequency
+            word_freq = {}
+            for word in words:
+                if word.isalnum() and word not in self.stop_words:
+                    word_freq[word] = word_freq.get(word, 0) + 1
+            
+            # Get top words as key phrases
+            key_words = sorted(word_freq.items(), key=lambda x: x[1], reverse=True)[:10]
+            return [word for word, freq in key_words]
+            
+        except Exception as e:
+            return [f"Could not extract key phrases: {str(e)}"]
 
     def analyze_text(self, text, output_dir='data/analysis'):
         """
@@ -142,9 +172,9 @@ class NLPProcessor:
             
             # Write sentiment analysis
             f.write("Sentiment Analysis:\n")
+            f.write(f"Overall Sentiment: {analysis['sentiment']['sentiment']}\n")
             f.write(f"Polarity: {analysis['sentiment']['polarity']}\n")
-            f.write(f"Subjectivity: {analysis['sentiment']['subjectivity']}\n")
-            f.write(f"Overall Sentiment: {analysis['sentiment']['sentiment']}\n\n")
+            f.write(f"Detailed Scores: {analysis['sentiment']['scores']}\n\n")
             
             # Write summary
             f.write("Summary:\n")
@@ -180,7 +210,6 @@ def analyze_transcription(transcription_file):
     print("\nAnalysis Results:")
     print(f"Sentiment: {analysis['sentiment']['sentiment']}")
     print(f"Polarity: {analysis['sentiment']['polarity']:.2f}")
-    print(f"Subjectivity: {analysis['sentiment']['subjectivity']:.2f}")
     print(f"\nSummary:\n{analysis['summary']}")
     print("\nTopics:")
     for topic in analysis['topics']:
