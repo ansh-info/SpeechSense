@@ -1,0 +1,18 @@
+=== Text Analysis Report ===
+
+Original Text:
+language it lets you access and manipulate databases SQL became a standard of the American national Standards Institute in 1986 and of the organisation for standardization in 1987
+
+Sentiment Analysis:
+Overall Sentiment: neutral
+Polarity: 0.0
+Detailed Scores: {'neg': 0.0, 'neu': 1.0, 'pos': 0.0, 'compound': 0.0}
+
+Summary:
+language it lets you access and manipulate databases SQL became a standard of the American national Standards Institute in 1986 and of the organisation for standardization in 1987
+
+Main Topics:
+Main Topic: language, lets, access, manipulate, databases
+
+Key Phrases:
+language, lets, access, manipulate, databases, sql, became, standard, american, national
