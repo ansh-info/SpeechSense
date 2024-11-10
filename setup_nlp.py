@@ -1,5 +1,6 @@
 import nltk
-from textblob import download_corpora
+import subprocess
+import sys
 
 def setup_nltk_and_textblob():
     """Download required NLTK data and TextBlob corpora."""
@@ -11,7 +12,11 @@ def setup_nltk_and_textblob():
         nltk.download(package)
     
     print("\nDownloading TextBlob corpora...")
-    download_corpora()
+    try:
+        subprocess.check_call([sys.executable, '-m', 'textblob.download_corpora'])
+        print("TextBlob corpora downloaded successfully!")
+    except subprocess.CalledProcessError as e:
+        print(f"Error downloading TextBlob corpora: {e}")
     
     print("\nSetup complete!")
 
