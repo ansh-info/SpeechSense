@@ -1,0 +1,18 @@
+=== Text Analysis Report ===
+
+Original Text:
+in the dark corner of the room I divert my gates to the old radio glowing a memory Edge listen to the ticking of the time machine drifting towards the 80s era in the night in Mercy nostalgia all radio convey Your Beautiful songs taking me flying far away in the tunes of the 80s eternal Love Stories engraved in rhythm in the heart that always yours sweet Memories embedded in every lyric her as if time stop in the melody behind the dust in the case you still shine all faithful radio Silent Witness of the past old radio convey Your Beautiful songs taking me flying far away in the tunes of the 80s eternal Love Stories engraved in rhythm in the heart that always yours even as time changes memories will not be in the depths of this heart you remain eternal old radio always convey the songs of the 80s to the future generations memories will not say in the depths of his heart you remain eternal radio always convey the songs of the 80s to the Future generation in the midst of silent Night old radio continues to sing a company quite steps towards a new guy keep shining already in a heart that always your
+
+Sentiment Analysis:
+Overall Sentiment: positive
+Polarity: 0.9732
+Detailed Scores: {'neg': 0.01, 'neu': 0.88, 'pos': 0.11, 'compound': 0.9732}
+
+Summary:
+in the dark corner of the room I divert my gates to the old radio glowing a memory Edge listen to the ticking of the time machine drifting towards the 80s era in the night in Mercy nostalgia all radio convey Your Beautiful songs taking me flying far away in the tunes of the 80s eternal Love Stories engraved in rhythm in the heart that always yours sweet Memories embedded in every lyric her as if time stop in the melody behind the dust in the case you still shine all faithful radio Silent Witness of the past old radio convey Your Beautiful songs taking me flying far away in the tunes of the 80s eternal Love Stories engraved in rhythm in the heart that always yours even as time changes memories will not be in the depths of this heart you remain eternal old radio always convey the songs of the 80s to the future generations memories will not say in the depths of his heart you remain eternal radio always convey the songs of the 80s to the Future generation in the midst of silent Night old radio continues to sing a company quite steps towards a new guy keep shining already in a heart that always your
+
+Main Topics:
+Main Topic: radio, 80s, heart, always, old
+
+Key Phrases:
+radio, 80s, heart, always, old, convey, songs, eternal, time, memories

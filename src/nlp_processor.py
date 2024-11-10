@@ -50,68 +50,73 @@ class NLPProcessor:
                 'scores': {'neg': 0.0, 'neu': 0.0, 'pos': 0.0, 'compound': 0.0},
                 'error': str(e)
             }
-    
+
     def generate_summary(self, text, num_sentences=3):
         """Generate a summary using sentence scoring based on word frequency."""
         try:
-            # Tokenize the text into sentences using nltk's sent_tokenize
-            sentences = [sent.strip() for sent in text.split('.') if sent.strip()]
+            # Split into sentences (handling multiple punctuation marks)
+            sentences = [s.strip() for s in text.replace('!', '.').replace('?', '.').split('.') if s.strip()]
             
-            # If text is short, return it as is
+            # Return original text if it's too short
             if len(sentences) <= num_sentences:
                 return text
             
-            # Tokenize words and remove stopwords
-            words = word_tokenize(text.lower())
+            # Calculate word frequencies
+            words = text.lower().split()
             word_freq = {}
-            
             for word in words:
                 if word.isalnum() and word not in self.stop_words:
                     word_freq[word] = word_freq.get(word, 0) + 1
             
-            # Score sentences based on word frequency
+            # Score sentences
             sentence_scores = {}
             for sentence in sentences:
-                score = sum(word_freq.get(word.lower(), 0) 
-                          for word in word_tokenize(sentence)
-                          if word.lower() in word_freq)
+                words = sentence.lower().split()
+                score = sum(word_freq.get(word, 0) for word in words if word not in self.stop_words)
+                score = score / (len(words) + 1)  # Normalize by length
                 sentence_scores[sentence] = score
             
-            # Get top sentences
-            summary_sentences = sorted(sentence_scores.items(), 
-                                    key=lambda x: x[1], 
-                                    reverse=True)[:num_sentences]
+            # Select top sentences
+            top_sentences = sorted(sentence_scores.items(), key=lambda x: x[1], reverse=True)[:num_sentences]
+            summary = '. '.join(sent for sent, _ in sorted(top_sentences, key=lambda x: sentences.index(x[0])))
             
-            # Sort sentences by their original order
-            summary_sentences.sort(key=lambda x: sentences.index(x[0]))
-            
-            return '. '.join(sent for sent, _ in summary_sentences) + '.'
-            
+            return summary + '.'
         except Exception as e:
-            return f"Error generating summary: {str(e)}"
-    
+            return str(e)
+
     def extract_topics(self, text, num_topics=3, num_words=5):
-        """Extract main topics using LDA."""
+        """Extract main topics using LDA with proper error handling."""
         try:
+            # Split text into sentences to create multiple documents
+            sentences = [s.strip() for s in text.replace('!', '.').replace('?', '.').split('.') if s.strip()]
+            
+            if len(sentences) < 2:
+                return [{'topic': 'Main Topic', 'words': self.extract_key_phrases(text)[:5]}]
+            
             # Create document-term matrix
             vectorizer = CountVectorizer(
                 max_df=0.95,
                 min_df=1,
-                stop_words='english'
+                stop_words='english',
+                max_features=100  # Limit features for short texts
             )
-            doc_term_matrix = vectorizer.fit_transform([text])
+            doc_term_matrix = vectorizer.fit_transform(sentences)
+            
+            # Adjust number of topics based on text length
+            actual_num_topics = min(num_topics, len(sentences), 3)
             
             # Create and fit LDA model
             lda_model = LatentDirichletAllocation(
-                n_components=min(num_topics, len(text.split())),
-                random_state=42
+                n_components=actual_num_topics,
+                random_state=42,
+                max_iter=10  # Faster convergence for short texts
             )
             lda_output = lda_model.fit_transform(doc_term_matrix)
             
             # Get feature names
             feature_names = vectorizer.get_feature_names_out()
             
-            # Extract top words for each topic
+            # Extract topics
             topics = []
             for topic_idx, topic in enumerate(lda_model.components_):
                 top_words_idx = topic.argsort()[:-num_words-1:-1]
@@ -123,7 +128,9 @@ class NLPProcessor:
             
             return topics
         except Exception as e:
-            return [{'topic': 'Error', 'words': [str(e)]}]
+            # Fallback to key phrases
+            key_phrases = self.extract_key_phrases(text)
+            return [{'topic': 'Main Topic', 'words': key_phrases[:5]}]
     
     def extract_key_phrases(self, text):
         """Extract key phrases using frequency-based approach."""

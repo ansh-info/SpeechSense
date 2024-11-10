@@ -1,0 +1,3 @@
+language it lets you access and manipulate databases
+SQL became a standard of the American national Standards Institute in 1986 and of the
+organisation for standardization in 1987
