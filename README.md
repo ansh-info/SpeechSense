@@ -126,19 +126,20 @@ git clone https://github.com/ansh-info/SpeechSense.git
 cd SpeechSense
 ```
 
-2. Create and activate virtual environment (optional but recommended)
+2. Create and activate virtual environment (Use python3.12)
 ```bash
+# on macOS/Linux install these packgaes
+brew install ffmpeg
+brew install portaudio
+brew install gcc
+
 # Using Conda(Recommended)
-conda create --name test python=3.12
-conda activate test
+conda create --name SpeechSense python=3.12
+conda activate SpeechSense
 
 # On macOS/Linux
-python3 -m venv venv
+python3.12 -m venv venv
 source venv/bin/activate
-
-# On Windows
-python -m venv venv
-.\venv\Scripts\activate
 ```
 
 3. Install dependencies
