@@ -1,6 +1,14 @@
 import nltk
 import subprocess
 import sys
+import os
+import sys
+
+# Add project root to path
+project_root = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(project_root)
+
+import nltk
 
 def setup_nltk_and_textblob():
     """Download required NLTK data and TextBlob corpora."""
