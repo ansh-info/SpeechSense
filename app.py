@@ -1,8 +1,8 @@
 import numpy as np
 import pandas as pd
+from datetime import datetime
 import streamlit as st
 import os
-from datetime import datetime
 import time
 from src.speech_recognition import SpeechHandler
 from src.nlp_processor import analyze_transcription
@@ -47,15 +47,16 @@ def process_uploaded_file(uploaded_file):
                 st.markdown(f">{result['transcription']}")
                 
                 # Display audio visualizations
-                st.session_state.visualizer.display_audio_waveform(temp_path)
-                st.session_state.visualizer.display_spectrogram(temp_path)
+                st.session_state.visualizer.display_audio_waveform(temp_path, key_suffix="upload")
+                st.session_state.visualizer.display_spectrogram(temp_path, key_suffix="upload")
             
             with analysis_tab:
                 # Perform and display analysis
                 analysis, _ = analyze_transcription(result['transcript_file'])
                 st.session_state.visualizer.create_analysis_dashboard(
                     analysis,
-                    audio_file=temp_path
+                    audio_file=temp_path,
+                    key_suffix="upload"
                 )
         else:
             st.error(f"Error processing audio: {result['error']}")
@@ -128,6 +129,7 @@ def main():
                     st.session_state.transcriber.start_recording()
                     st.session_state.transcripts = []
                     st.session_state.metrics_history = []
+                    st.session_state.analysis_results = None  # Reset analysis results
         
         with col2:
             if st.session_state.recording:
@@ -154,7 +156,8 @@ def main():
                     
                     with metrics_container:
                         st.session_state.visualizer.display_realtime_metrics(
-                            st.session_state.metrics_history
+                            st.session_state.metrics_history,
+                            key_suffix="realtime"
                         )
                     
                     with transcript_container:
@@ -164,13 +167,33 @@ def main():
                 time.sleep(1)
         
         # Display analysis results after recording
-            if not st.session_state.recording and st.session_state.analysis_results:
+        if not st.session_state.recording and st.session_state.transcriber:
+            # Get the combined transcript
+            full_text = " ".join(st.session_state.transcripts)
+            
+            # Perform final analysis if not already done
+            if not st.session_state.analysis_results and full_text.strip():
+                # Save the transcript to a temporary file
+                temp_transcript_file = os.path.join(
+                    config.TRANSCRIPTIONS_DIR,
+                    f"temp_transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                )
+                with open(temp_transcript_file, 'w', encoding='utf-8') as f:
+                    f.write(full_text)
+                
+                # Perform analysis
+                analysis_results, _ = analyze_transcription(temp_transcript_file)
+                st.session_state.analysis_results = analysis_results
+            
+            # Display analysis dashboard
+            if st.session_state.analysis_results:
                 st.markdown("---")
                 st.markdown("### Analysis Results")
                 
                 # Create analysis dashboard
                 st.session_state.visualizer.create_analysis_dashboard(
-                    st.session_state.analysis_results
+                    st.session_state.analysis_results,
+                    key_suffix="final"
                 )
                 
                 # Display final metrics
@@ -242,35 +265,32 @@ def main():
                 col1, col2, col3 = st.columns(3)
                 
                 with col1:
-                    if st.button("Download Transcript"):
-                        transcript_text = "\n".join(st.session_state.transcripts)
-                        st.download_button(
-                            "Download Transcript",
-                            transcript_text,
-                            file_name=f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                            mime="text/plain"
-                        )
+                    transcript_text = "\n".join(st.session_state.transcripts)
+                    st.download_button(
+                        "Download Transcript",
+                        transcript_text,
+                        file_name=f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain"
+                    )
                 
                 with col2:
-                    if st.button("Download Analysis"):
-                        analysis_text = str(st.session_state.analysis_results)
-                        st.download_button(
-                            "Download Analysis",
-                            analysis_text,
-                            file_name=f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
-                            mime="text/plain"
-                        )
+                    analysis_text = str(st.session_state.analysis_results)
+                    st.download_button(
+                        "Download Analysis",
+                        analysis_text,
+                        file_name=f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain"
+                    )
                 
                 with col3:
-                    if st.button("Download Metrics"):
-                        metrics_df = pd.DataFrame(st.session_state.metrics_history)
-                        csv = metrics_df.to_csv(index=False)
-                        st.download_button(
-                            "Download Metrics",
-                            csv,
-                            file_name=f"metrics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
-                            mime="text/csv"
-                        )
+                    metrics_df = pd.DataFrame(st.session_state.metrics_history)
+                    csv = metrics_df.to_csv(index=False)
+                    st.download_button(
+                        "Download Metrics",
+                        csv,
+                        file_name=f"metrics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv"
+                    )
 
 if __name__ == "__main__":
     main()
