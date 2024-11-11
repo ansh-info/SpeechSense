@@ -1,10 +1,13 @@
+import numpy as np
+import pandas as pd
+from datetime import datetime
 import streamlit as st
 import os
-from datetime import datetime
 import time
 from src.speech_recognition import SpeechHandler
 from src.nlp_processor import analyze_transcription
 from src.realtime_transcription import RealtimeTranscriber
+from src.visualization import StreamlitVisualizer, init_visualization
 from src import config
 
 def init_session_state():
@@ -17,50 +20,9 @@ def init_session_state():
         st.session_state.analysis_results = None
     if 'transcripts' not in st.session_state:
         st.session_state.transcripts = []
-
-def display_analysis_results(analysis):
-    """Display analysis results in a formatted way"""
-    if not analysis:
-        return
-
-    # Display sentiment with color coding
-    sentiment = analysis['sentiment']['sentiment']
-    polarity = analysis['sentiment']['polarity']
-    
-    sentiment_color = {
-        'positive': 'green',
-        'negative': 'red',
-        'neutral': 'blue'
-    }.get(sentiment, 'black')
-    
-    st.markdown(f"**Sentiment:** :{sentiment_color}[{sentiment}]")
-    st.markdown(f"**Polarity Score:** :{sentiment_color}[{polarity:.2f}]")
-    
-    # Display summary
-    st.markdown("**Summary:**")
-    summary = analysis.get('summary', '')
-    if isinstance(summary, str) and len(summary) > 50:  # Check if it's a valid summary
-        st.markdown(f">{summary}")
-    else:
-        st.markdown("Summary not available for short texts")
-    
-    # Display topics if available
-    st.markdown("**Topics:**")
-    topics = analysis.get('topics', [])
-    if isinstance(topics, list) and topics and isinstance(topics[0], dict):
-        for topic in topics:
-            if 'Error' not in topic['topic']:
-                st.markdown(f"- {topic['topic']}: {', '.join(topic['words'])}")
-    else:
-        st.markdown("Topics not available for short texts")
-    
-    # Display key phrases
-    st.markdown("**Key Phrases:**")
-    key_phrases = analysis.get('key_phrases', [])
-    if isinstance(key_phrases, list) and key_phrases:
-        st.markdown(", ".join(key_phrases))
-    else:
-        st.markdown("Key phrases not available")
+    if 'metrics_history' not in st.session_state:
+        st.session_state.metrics_history = []
+    init_visualization()
 
 def process_uploaded_file(uploaded_file):
     """Process an uploaded audio file"""
@@ -69,6 +31,9 @@ def process_uploaded_file(uploaded_file):
         temp_path = os.path.join(config.RAW_DATA_DIR, uploaded_file.name)
         with open(temp_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
+        
+        # Generate a unique identifier for this upload
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         
         # Process the file
         handler = SpeechHandler()
@@ -81,29 +46,44 @@ def process_uploaded_file(uploaded_file):
             transcript_tab, analysis_tab = st.tabs(["Transcription", "Analysis"])
             
             with transcript_tab:
-                st.markdown("**Full Transcription:**")
+                st.markdown("### Full Transcription")
                 st.markdown(f">{result['transcription']}")
+                
+                # Display audio visualizations with unique keys
+                st.session_state.visualizer.display_audio_waveform(
+                    temp_path, 
+                    f"upload_{timestamp}_waveform"
+                )
+                st.session_state.visualizer.display_spectrogram(temp_path)
             
             with analysis_tab:
                 # Perform and display analysis
                 analysis, _ = analyze_transcription(result['transcript_file'])
-                display_analysis_results(analysis)
+                st.session_state.visualizer.create_analysis_dashboard(
+                    analysis,
+                    audio_file=temp_path,
+                    key_suffix=f"upload_{timestamp}"
+                )
         else:
             st.error(f"Error processing audio: {result['error']}")
 
-def start_recording():
-    """Start real-time recording"""
-    st.session_state.recording = True
-    st.session_state.transcriber = RealtimeTranscriber(analysis_interval=10)
-    st.session_state.transcriber.start_recording()
-    st.session_state.transcripts = []
-
-def stop_recording():
-    """Stop real-time recording"""
-    if st.session_state.transcriber:
-        st.session_state.recording = False
-        analysis = st.session_state.transcriber.stop_recording()
-        st.session_state.analysis_results = analysis
+def update_metrics_history(text=None, analysis=None):
+    """Update metrics history for real-time visualization"""
+    timestamp = datetime.now()
+    
+    if analysis and 'sentiment' in analysis:
+        st.session_state.metrics_history.append({
+            'timestamp': timestamp,
+            'metric': 'sentiment',
+            'value': analysis['sentiment']['polarity']
+        })
+    
+    if text:
+        st.session_state.metrics_history.append({
+            'timestamp': timestamp,
+            'metric': 'word_count',
+            'value': len(text.split())
+        })
 
 def main():
     st.title("Speech Recognition & NLP Analysis")
@@ -112,11 +92,20 @@ def main():
     init_session_state()
     
     # Sidebar for mode selection
-    mode = st.sidebar.radio(
-        "Select Mode",
-        ["File Upload", "Real-time Recording"]
-    )
-    
+    with st.sidebar:
+        mode = st.radio(
+            "Select Mode",
+            ["File Upload", "Real-time Recording"]
+        )
+        
+        st.markdown("---")
+        st.markdown("### Settings")
+        
+        # Add visualization settings
+        st.checkbox("Show Audio Waveform", value=True, key="show_waveform")
+        st.checkbox("Show Spectrogram", value=True, key="show_spectrogram")
+        st.checkbox("Show Word Cloud", value=True, key="show_wordcloud")
+        
     if mode == "File Upload":
         st.header("Upload Audio File")
         
@@ -141,26 +130,41 @@ def main():
         with col1:
             if not st.session_state.recording:
                 if st.button("🎙️ Start Recording"):
-                    start_recording()
+                    st.session_state.recording = True
+                    st.session_state.transcriber = RealtimeTranscriber(analysis_interval=10)
+                    st.session_state.transcriber.start_recording()
+                    st.session_state.transcripts = []
+                    st.session_state.metrics_history = []
+                    st.session_state.analysis_results = None  # Reset analysis results
         
         with col2:
             if st.session_state.recording:
                 if st.button("⏹️ Stop Recording"):
-                    stop_recording()
+                    if st.session_state.transcriber:
+                        st.session_state.recording = False
+                        analysis = st.session_state.transcriber.stop_recording()
+                        st.session_state.analysis_results = analysis
         
         # Display recording status and transcripts
         if st.session_state.recording:
             st.markdown("🔴 **Recording in progress...**")
             
-            # Create placeholder for real-time updates
+            # Create containers for real-time updates
+            metrics_container = st.container()
             transcript_container = st.container()
             
             while st.session_state.recording:
-                if (st.session_state.transcriber and 
-                    st.session_state.transcriber.full_transcript):
+                if st.session_state.transcriber and st.session_state.transcriber.full_transcript:
                     latest = st.session_state.transcriber.full_transcript[-1]
                     if latest not in st.session_state.transcripts:
                         st.session_state.transcripts.append(latest)
+                        update_metrics_history(text=latest)
+                    
+                    with metrics_container:
+                        st.session_state.visualizer.display_realtime_metrics(
+                            st.session_state.metrics_history,
+                            key_suffix="realtime"
+                        )
                     
                     with transcript_container:
                         st.markdown("**Latest Transcriptions:**")
@@ -169,10 +173,130 @@ def main():
                 time.sleep(1)
         
         # Display analysis results after recording
-        if not st.session_state.recording and st.session_state.analysis_results:
-            st.markdown("---")
-            st.markdown("### Recording Analysis")
-            display_analysis_results(st.session_state.analysis_results)
+        if not st.session_state.recording and st.session_state.transcriber:
+            # Get the combined transcript
+            full_text = " ".join(st.session_state.transcripts)
+            
+            # Perform final analysis if not already done
+            if not st.session_state.analysis_results and full_text.strip():
+                # Save the transcript to a temporary file
+                temp_transcript_file = os.path.join(
+                    config.TRANSCRIPTIONS_DIR,
+                    f"temp_transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt"
+                )
+                with open(temp_transcript_file, 'w', encoding='utf-8') as f:
+                    f.write(full_text)
+                
+                # Perform analysis
+                analysis_results, _ = analyze_transcription(temp_transcript_file)
+                st.session_state.analysis_results = analysis_results
+            
+            # Display analysis dashboard
+            if st.session_state.analysis_results:
+                st.markdown("---")
+                st.markdown("### Analysis Results")
+                
+                # Create analysis dashboard
+                st.session_state.visualizer.create_analysis_dashboard(
+                    st.session_state.analysis_results,
+                    key_suffix="final"
+                )
+                
+                # Display final metrics
+                st.markdown("### Recording Summary")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    total_duration = len(st.session_state.transcripts) * 10  # Approximate
+                    st.metric(
+                        "Recording Duration",
+                        f"{total_duration} seconds",
+                        help="Approximate duration based on transcript segments"
+                    )
+                
+                with col2:
+                    total_words = sum(len(t.split()) for t in st.session_state.transcripts)
+                    st.metric(
+                        "Total Words",
+                        total_words,
+                        help="Total number of words transcribed"
+                    )
+                
+                with col3:
+                    # Calculate average sentiment if metrics history exists
+                    sentiment_metrics = [
+                        m['value'] for m in st.session_state.metrics_history 
+                        if m['metric'] == 'sentiment'
+                    ]
+                    if sentiment_metrics:
+                        avg_sentiment = np.mean(sentiment_metrics)
+                        st.metric(
+                            "Average Sentiment",
+                            f"{avg_sentiment:.2f}",
+                            help="Average sentiment score throughout the recording"
+                        )
+                    else:
+                        st.metric(
+                            "Average Sentiment",
+                            "N/A",
+                            help="No sentiment data available"
+                        )
+                
+                # Additional summary metrics
+                st.markdown("---")
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    # Display transcription confidence if available
+                    if hasattr(st.session_state.transcriber, 'confidence_scores'):
+                        avg_confidence = np.mean(st.session_state.transcriber.confidence_scores)
+                        st.metric(
+                            "Average Transcription Confidence",
+                            f"{avg_confidence:.1%}",
+                            help="Average confidence score of speech recognition"
+                        )
+                
+                with col2:
+                    # Display speaking rate
+                    if total_duration > 0:
+                        speaking_rate = total_words / (total_duration / 60)  # words per minute
+                        st.metric(
+                            "Speaking Rate",
+                            f"{speaking_rate:.1f} WPM",
+                            help="Words per minute"
+                        )
+                
+                # Download buttons for results
+                st.markdown("### Export Results")
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    transcript_text = "\n".join(st.session_state.transcripts)
+                    st.download_button(
+                        "Download Transcript",
+                        transcript_text,
+                        file_name=f"transcript_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain"
+                    )
+                
+                with col2:
+                    analysis_text = str(st.session_state.analysis_results)
+                    st.download_button(
+                        "Download Analysis",
+                        analysis_text,
+                        file_name=f"analysis_{datetime.now().strftime('%Y%m%d_%H%M%S')}.txt",
+                        mime="text/plain"
+                    )
+                
+                with col3:
+                    metrics_df = pd.DataFrame(st.session_state.metrics_history)
+                    csv = metrics_df.to_csv(index=False)
+                    st.download_button(
+                        "Download Metrics",
+                        csv,
+                        file_name=f"metrics_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv",
+                        mime="text/csv"
+                    )
 
 if __name__ == "__main__":
     main()
