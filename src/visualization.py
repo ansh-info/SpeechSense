@@ -74,7 +74,9 @@ class StreamlitVisualizer:
             buf = io.BytesIO()
             plt.savefig(buf, format='png')
             plt.close()
-            st.image(buf, key=f"spectrogram_{key_suffix}")
+            
+            # Display image without key parameter
+            st.image(buf)
             
         except Exception as e:
             st.error(f"Error displaying spectrogram: {str(e)}")
@@ -126,7 +128,9 @@ class StreamlitVisualizer:
             buf = io.BytesIO()
             plt.savefig(buf, format='png')
             plt.close()
-            st.image(buf, key=f"wordcloud_{key_suffix}")
+            
+            # Display image without key parameter
+            st.image(buf)
             
         except Exception as e:
             st.error(f"Error displaying word cloud: {str(e)}")
@@ -218,20 +222,17 @@ class StreamlitVisualizer:
                 with col1:
                     st.metric(
                         "Sentiment",
-                        analysis_results['sentiment']['sentiment'],
-                        key=f"metric_sentiment_{key_suffix}"
+                        analysis_results['sentiment']['sentiment']
                     )
                 with col2:
                     st.metric(
                         "Polarity",
-                        f"{analysis_results['sentiment']['polarity']:.2f}",
-                        key=f"metric_polarity_{key_suffix}"
+                        f"{analysis_results['sentiment']['polarity']:.2f}"
                     )
                 with col3:
                     st.metric(
                         "Key Phrases",
-                        len(analysis_results['key_phrases']),
-                        key=f"metric_keyphrases_{key_suffix}"
+                        len(analysis_results['key_phrases'])
                     )
             
             # Audio Analysis Tab
@@ -239,7 +240,7 @@ class StreamlitVisualizer:
                 if audio_file:
                     st.markdown("### Audio Visualization")
                     self.display_audio_waveform(audio_file, key_suffix)
-                    self.display_spectrogram(audio_file, key_suffix)
+                    self.display_spectrogram(audio_file)  # Removed key parameter
             
             # Sentiment Tab
             with tabs[2]:
@@ -261,10 +262,7 @@ class StreamlitVisualizer:
             with tabs[4]:
                 st.markdown("### Word Cloud")
                 if 'summary' in analysis_results:
-                    self.display_word_cloud(
-                        analysis_results['summary'],
-                        key_suffix
-                    )
+                    self.display_word_cloud(analysis_results['summary'])  # Removed key parameter
             
         except Exception as e:
             st.error(f"Error creating analysis dashboard: {str(e)}")
