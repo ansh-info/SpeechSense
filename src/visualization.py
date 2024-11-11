@@ -23,7 +23,7 @@ class StreamlitVisualizer:
             'background': '#f8f9fa'
         }
     
-    def display_audio_waveform(self, audio_file):
+    def display_audio_waveform(self, audio_file, key_suffix=""):
         """Display audio waveform visualization."""
         try:
             # Load audio file
@@ -50,12 +50,12 @@ class StreamlitVisualizer:
                 margin=dict(l=0, r=0, t=30, b=0)
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, key=f"waveform_{key_suffix}")
             
         except Exception as e:
             st.error(f"Error displaying waveform: {str(e)}")
     
-    def display_spectrogram(self, audio_file):
+    def display_spectrogram(self, audio_file, key_suffix=""):
         """Display audio spectrogram."""
         try:
             # Load audio file
@@ -74,12 +74,12 @@ class StreamlitVisualizer:
             buf = io.BytesIO()
             plt.savefig(buf, format='png')
             plt.close()
-            st.image(buf)
+            st.image(buf, key=f"spectrogram_{key_suffix}")
             
         except Exception as e:
             st.error(f"Error displaying spectrogram: {str(e)}")
     
-    def display_sentiment_gauge(self, sentiment_score):
+    def display_sentiment_gauge(self, sentiment_score, key_suffix=""):
         """Display sentiment score as a gauge chart."""
         try:
             fig = go.Figure(go.Indicator(
@@ -102,12 +102,12 @@ class StreamlitVisualizer:
                 margin=dict(l=0, r=0, t=30, b=0)
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, key=f"sentiment_gauge_{key_suffix}")
             
         except Exception as e:
             st.error(f"Error displaying sentiment gauge: {str(e)}")
     
-    def display_word_cloud(self, text):
+    def display_word_cloud(self, text, key_suffix=""):
         """Generate and display word cloud."""
         try:
             wordcloud = WordCloud(
@@ -126,12 +126,12 @@ class StreamlitVisualizer:
             buf = io.BytesIO()
             plt.savefig(buf, format='png')
             plt.close()
-            st.image(buf)
+            st.image(buf, key=f"wordcloud_{key_suffix}")
             
         except Exception as e:
             st.error(f"Error displaying word cloud: {str(e)}")
     
-    def display_topic_visualization(self, topics):
+    def display_topic_visualization(self, topics, key_suffix=""):
         """Display interactive topic visualization."""
         try:
             # Prepare data
@@ -163,14 +163,17 @@ class StreamlitVisualizer:
                 title='Topic Distribution'
             ).interactive()
             
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, use_container_width=True, key=f"topics_{key_suffix}")
             
         except Exception as e:
             st.error(f"Error displaying topic visualization: {str(e)}")
     
-    def display_realtime_metrics(self, metrics_history):
+    def display_realtime_metrics(self, metrics_history, key_suffix=""):
         """Display real-time metrics visualization."""
         try:
+            if not metrics_history:
+                return
+                
             df = pd.DataFrame(metrics_history)
             
             # Create line chart
@@ -185,14 +188,18 @@ class StreamlitVisualizer:
                 title='Real-time Metrics'
             ).interactive()
             
-            st.altair_chart(chart, use_container_width=True)
+            st.altair_chart(chart, use_container_width=True, key=f"metrics_{key_suffix}")
             
         except Exception as e:
             st.error(f"Error displaying real-time metrics: {str(e)}")
     
-    def create_analysis_dashboard(self, analysis_results, audio_file=None):
+    def create_analysis_dashboard(self, analysis_results, audio_file=None, key_suffix=""):
         """Create a complete analysis dashboard."""
         try:
+            if not analysis_results:
+                st.warning("No analysis results available.")
+                return
+                
             st.markdown("## Analysis Dashboard")
             
             # Create tabs for different visualizations
@@ -209,34 +216,55 @@ class StreamlitVisualizer:
                 st.markdown("### Key Metrics")
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.metric("Sentiment", analysis_results['sentiment']['sentiment'])
+                    st.metric(
+                        "Sentiment",
+                        analysis_results['sentiment']['sentiment'],
+                        key=f"metric_sentiment_{key_suffix}"
+                    )
                 with col2:
-                    st.metric("Polarity", f"{analysis_results['sentiment']['polarity']:.2f}")
+                    st.metric(
+                        "Polarity",
+                        f"{analysis_results['sentiment']['polarity']:.2f}",
+                        key=f"metric_polarity_{key_suffix}"
+                    )
                 with col3:
-                    st.metric("Key Phrases", len(analysis_results['key_phrases']))
+                    st.metric(
+                        "Key Phrases",
+                        len(analysis_results['key_phrases']),
+                        key=f"metric_keyphrases_{key_suffix}"
+                    )
             
             # Audio Analysis Tab
             with tabs[1]:
                 if audio_file:
                     st.markdown("### Audio Visualization")
-                    self.display_audio_waveform(audio_file)
-                    self.display_spectrogram(audio_file)
+                    self.display_audio_waveform(audio_file, key_suffix)
+                    self.display_spectrogram(audio_file, key_suffix)
             
             # Sentiment Tab
             with tabs[2]:
                 st.markdown("### Sentiment Analysis")
-                self.display_sentiment_gauge(analysis_results['sentiment']['polarity'])
+                self.display_sentiment_gauge(
+                    analysis_results['sentiment']['polarity'],
+                    key_suffix
+                )
             
             # Topics Tab
             with tabs[3]:
                 st.markdown("### Topic Analysis")
-                self.display_topic_visualization(analysis_results['topics'])
+                self.display_topic_visualization(
+                    analysis_results['topics'],
+                    key_suffix
+                )
             
             # Word Cloud Tab
             with tabs[4]:
                 st.markdown("### Word Cloud")
                 if 'summary' in analysis_results:
-                    self.display_word_cloud(analysis_results['summary'])
+                    self.display_word_cloud(
+                        analysis_results['summary'],
+                        key_suffix
+                    )
             
         except Exception as e:
             st.error(f"Error creating analysis dashboard: {str(e)}")
