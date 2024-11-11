@@ -1,10 +1,12 @@
 import os
 
+# Get project root directory
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 # Directory paths
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-RAW_DATA_DIR = os.path.join(BASE_DIR, 'data', 'raw')
-PROCESSED_DATA_DIR = os.path.join(BASE_DIR, 'data', 'processed')
-TRANSCRIPTIONS_DIR = os.path.join(BASE_DIR, 'data', 'transcriptions')
+RAW_DATA_DIR = os.path.join(PROJECT_ROOT, 'data', 'raw')
+PROCESSED_DATA_DIR = os.path.join(PROJECT_ROOT, 'data', 'processed')
+TRANSCRIPTIONS_DIR = os.path.join(PROJECT_ROOT, 'data', 'transcriptions')
 
 # Audio settings
 SAMPLE_RATE = 16000

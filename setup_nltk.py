@@ -1,6 +1,12 @@
+import os
+import sys
+
+# Add project root to path
+project_root = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(project_root)
+
 import nltk
 import ssl
-
 try:
     _create_unverified_https_context = ssl._create_unverified_context
 except AttributeError:
