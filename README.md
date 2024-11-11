@@ -128,13 +128,17 @@ cd SpeechSense
 
 2. Create and activate virtual environment (optional but recommended)
 ```bash
-# On Windows
-python -m venv venv
-.\venv\Scripts\activate
+# Using Conda(Recommended)
+conda create --name test python=3.12
+conda activate test
 
 # On macOS/Linux
 python3 -m venv venv
 source venv/bin/activate
+
+# On Windows
+python -m venv venv
+.\venv\Scripts\activate
 ```
 
 3. Install dependencies
