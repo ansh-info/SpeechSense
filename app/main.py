@@ -4,10 +4,15 @@ from datetime import datetime
 import streamlit as st
 import os
 import time
+import sys
+
+# Add parent directory to path to allow imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from src.speech_recognition import SpeechHandler
 from src.nlp_processor import analyze_transcription
 from src.realtime_transcription import RealtimeTranscriber
-from src.visualization import StreamlitVisualizer, init_visualization
+from app.visualization import StreamlitVisualizer, init_visualization
 from src import config
 
 def init_session_state():

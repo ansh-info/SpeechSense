@@ -11,6 +11,11 @@ import io
 import altair as alt
 from wordcloud import WordCloud
 import soundfile as sf
+import os
+import sys
+
+# Add parent directory to path to allow imports
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 class StreamlitVisualizer:
     """Handle all visualization components for the Streamlit interface"""
