@@ -5,9 +5,11 @@ A robust speech recognition and natural language processing system that transcri
 [![Python Version](https://img.shields.io/badge/python-3.8%2B-blue)]()
 [![License](https://img.shields.io/badge/license-MIT-green)]()
 [![Dependencies](https://img.shields.io/badge/dependencies-up%20to%20date-brightgreen)]()
-[![Streamlit](https://img.shields.io/badge/Streamlit-1.28.1-FF4B4B)]()
-[![NLTK](https://img.shields.io/badge/NLTK-3.8.1-yellow)]()
-[![scikit-learn](https://img.shields.io/badge/scikit--learn-1.3.0-orange)]()
+[![Streamlit](https://img.shields.io/badge/Streamlit-FF4B4B)]()
+[![NLTK](https://img.shields.io/badge/NLTK-yellow)]()
+[![scikit-learn](https://img.shields.io/badge/scikit--learn-orange)]()
+
+![System Overview](images/audio-transciption.png)
 
 ## 🚀 Technical Architecture
 
@@ -70,6 +72,8 @@ NLP_CONFIG = {
 }
 ```
 
+![System Overview](images/audio-analysis.png)
+
 ## 🌟 Features
 
 ### Speech Recognition
@@ -78,6 +82,8 @@ NLP_CONFIG = {
 - 🔊 Audio preprocessing and noise reduction
 - 🎙️ Live recording capabilities
 
+![Real-Time](images/realtimemetrics.png)
+
 ### NLP Analysis
 - 😊 Sentiment Analysis using VADER
 - 📝 Automatic Text Summarization
@@ -85,11 +91,25 @@ NLP_CONFIG = {
 - 🔑 Key Phrase Extraction
 - 📈 Real-time analysis updates
 
+![Analysis](images/overview-realtime.png)
+
 ### User Interface
 - 🌐 Web-based interface using Streamlit
 - 📤 File upload functionality
 - ⚡ Real-time processing feedback
 - 📊 Formatted analysis display
+
+![Analysis](images/sentiment-realtime.png)
+
+### Interactive Visualizations
+- Real-time Audio Waveform
+- Spectrogram Analysis
+- Sentiment Gauge
+- Topic Distribution Charts
+- Word Clouds
+- Performance Metrics Dashboard
+
+![Analysis](images/topic-audio.png)
 
 ## 🚀 Quick Start
 
@@ -125,54 +145,82 @@ pip install -r requirements.txt
 4. Install NLTK data
 ```bash
 python setup_nltk.py
+python setup_nlp.py
 ```
 
 ### Running the Application
 
 1. Start the Streamlit interface
 ```bash
-streamlit run app.py
+streamlit run app/main.py
 ```
 
 2. Open your browser and navigate to `http://localhost:8501`
 
 ## 📁 Project Structure
-
 ```
 speech_recognition_project/
-├── data/
-│   ├── raw/                  # Original audio files
-│   ├── processed/            # Processed audio files
-│   ├── transcriptions/       # Text transcriptions
-│   └── analysis/            # NLP analysis results
+├── app/
+│   ├── main.py              # Main application
+│   ├── visualization.py     # Visualization components
+│   └── static/css/
 ├── src/
-│   ├── __init__.py
-│   ├── config.py            # Configuration settings
+│   ├── audio_file_handler.py
 │   ├── audio_preprocessing.py
-│   ├── speech_recognition.py
 │   ├── nlp_processor.py
-│   └── realtime_transcription.py
-├── setup_nltk.py
-├── test_speech_recognition_v2.py
-├── test_nlp.py
-├── app.py
-└── requirements.txt
+│   ├── realtime_transcription.py
+│   └── speech_recognition.py
+├── tests/                   # Test suite
+└── data/                    # Data storage
 ```
 
-## 💡 Usage
+## 📊 Performance
+
+- Transcription Accuracy: ~85%
+- Processing Speed: 1.2x real-time
+- Real-time Analysis Delay: <2 seconds
+- Memory Usage: ~200MB baseline
+
+## 📈 Recent Updates
+
+### Version 2.0
+- Added comprehensive visualization dashboard
+- Implemented real-time metrics tracking
+- Enhanced project structure and organization
+- Improved error handling and stability
+- Added export functionality for analysis results
+
+### Version 1.0
+- Initial release with basic functionality
+- File-based transcription
+- Basic NLP analysis
+- Simple user interface
+
+## 📱 Usage
 
 ### File Upload Mode
-1. Select "File Upload" mode in the sidebar
-2. Upload an audio file (supported formats: WAV, MP3, M4A, FLAC, OGG)
+![File Upload](images/Dashboard.png)
+
+1. Select "File Upload" from the sidebar
+2. Upload your audio file (WAV, MP3, M4A, FLAC, OGG)
 3. Click "Process Audio"
-4. View transcription and analysis results
+4. View results in the analysis dashboard
 
 ### Real-time Recording Mode
-1. Select "Real-time Recording" mode in the sidebar
-2. Click "Start Recording"
-3. Speak into your microphone
-4. Click "Stop Recording" when finished
-5. View transcription and analysis results
+![Real-time Recording](images/realtime-dashboard.png)
+
+1. Select "Real-time Recording" from the sidebar
+2. Click "Start Recording" to begin
+3. Monitor real-time transcription and analysis
+4. Click "Stop Recording" to view complete analysis
+
+### Analysis Dashboard
+![Analysis Results](images/wordcloud-realtime.png)
+
+- View transcription text
+- Explore sentiment analysis
+- Check topic distribution
+- Generate and download reports
 
 ## 🔧 Technical Details
 
@@ -194,17 +242,14 @@ speech_recognition_project/
 - Scalable for longer recordings
 - Handles multiple audio formats efficiently
 
-## 📋 Dependencies
+## 🛠️ Technologies Used
 
-- `streamlit`: Web interface
-- `speech_recognition`: Speech-to-text conversion
-- `nltk`: Natural language processing
-- `scikit-learn`: Machine learning and topic modeling
-- `sounddevice`: Audio recording
-- `soundfile`: Audio file handling
-- `pydub`: Audio format conversion
-- `numpy`: Numerical computations
-- `pandas`: Data handling
+- **Core Framework:** Python 3.8+
+- **Speech Recognition:** Google Speech Recognition API
+- **NLP Libraries:** NLTK, scikit-learn
+- **Audio Processing:** PyAudio, librosa, sounddevice
+- **Visualization:** Streamlit, Plotly, Matplotlib, Altair
+- **Data Processing:** NumPy, Pandas
 
 ## 🔄 Development Process
 
@@ -246,20 +291,14 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Push to the branch
 5. Open a Pull Request
 
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🎯 Future Enhancements
+## 🔜 Roadmap
 
 - [ ] Multi-language support
 - [ ] Speaker diarization
-- [ ] Enhanced noise reduction
+- [ ] Advanced sentiment analysis
 - [ ] Custom topic models
-- [ ] Data visualization
-- [ ] Export functionality
-- [ ] User authentication
-- [ ] API endpoints
+- [ ] Mobile responsive interface
+- [ ] Cloud deployment support
 
 ## 💬 FAQ
 
@@ -281,6 +320,10 @@ If you have any questions or need help, please:
 1. Check the FAQ section
 2. Search in Issues
 3. Open a new Issue if needed
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🙏 Acknowledgments
 
