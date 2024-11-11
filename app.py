@@ -32,6 +32,9 @@ def process_uploaded_file(uploaded_file):
         with open(temp_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
         
+        # Generate a unique identifier for this upload
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        
         # Process the file
         handler = SpeechHandler()
         result = handler.process_audio_file(temp_path)
@@ -46,9 +49,12 @@ def process_uploaded_file(uploaded_file):
                 st.markdown("### Full Transcription")
                 st.markdown(f">{result['transcription']}")
                 
-                # Display audio visualizations
-                st.session_state.visualizer.display_audio_waveform(temp_path, key_suffix="upload")
-                st.session_state.visualizer.display_spectrogram(temp_path, key_suffix="upload")
+                # Display audio visualizations with unique keys
+                st.session_state.visualizer.display_audio_waveform(
+                    temp_path, 
+                    f"upload_{timestamp}_waveform"
+                )
+                st.session_state.visualizer.display_spectrogram(temp_path)
             
             with analysis_tab:
                 # Perform and display analysis
@@ -56,7 +62,7 @@ def process_uploaded_file(uploaded_file):
                 st.session_state.visualizer.create_analysis_dashboard(
                     analysis,
                     audio_file=temp_path,
-                    key_suffix="upload"
+                    key_suffix=f"upload_{timestamp}"
                 )
         else:
             st.error(f"Error processing audio: {result['error']}")
