@@ -215,6 +215,9 @@ class StreamlitVisualizer:
                 "Word Cloud"
             ])
             
+            # Generate a unique timestamp for this dashboard instance
+            timestamp = datetime.now().strftime("%H%M%S")
+            
             # Overview Tab
             with tabs[0]:
                 st.markdown("### Key Metrics")
@@ -239,15 +242,19 @@ class StreamlitVisualizer:
             with tabs[1]:
                 if audio_file:
                     st.markdown("### Audio Visualization")
-                    self.display_audio_waveform(audio_file, key_suffix)
-                    self.display_spectrogram(audio_file)  # Removed key parameter
+                    # Use timestamp to create unique keys
+                    self.display_audio_waveform(
+                        audio_file, 
+                        f"{key_suffix}_{timestamp}_waveform"
+                    )
+                    self.display_spectrogram(audio_file)
             
             # Sentiment Tab
             with tabs[2]:
                 st.markdown("### Sentiment Analysis")
                 self.display_sentiment_gauge(
                     analysis_results['sentiment']['polarity'],
-                    key_suffix
+                    f"{key_suffix}_{timestamp}_sentiment"
                 )
             
             # Topics Tab
@@ -255,14 +262,14 @@ class StreamlitVisualizer:
                 st.markdown("### Topic Analysis")
                 self.display_topic_visualization(
                     analysis_results['topics'],
-                    key_suffix
+                    f"{key_suffix}_{timestamp}_topics"
                 )
             
             # Word Cloud Tab
             with tabs[4]:
                 st.markdown("### Word Cloud")
                 if 'summary' in analysis_results:
-                    self.display_word_cloud(analysis_results['summary'])  # Removed key parameter
+                    self.display_word_cloud(analysis_results['summary'])
             
         except Exception as e:
             st.error(f"Error creating analysis dashboard: {str(e)}")
