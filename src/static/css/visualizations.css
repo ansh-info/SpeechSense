@@ -1,0 +1,81 @@
+/* Dashboard styles */
+.stTabs [data-baseweb="tab-list"] {
+    gap: 8px;
+}
+
+.stTabs [data-baseweb="tab"] {
+    height: 50px;
+    white-space: pre-wrap;
+    background-color: #f0f2f6;
+    border-radius: 4px;
+    gap: 4px;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+.stTabs [aria-selected="true"] {
+    background-color: #e6e9ef;
+}
+
+/* Metrics styling */
+[data-testid="stMetricValue"] {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+/* Chart containers */
+.chart-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+    margin-bottom: 16px;
+}
+
+/* Word cloud container */
+.wordcloud-container {
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    text-align: center;
+}
+
+/* Real-time metrics */
+.metrics-container {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.metric-card {
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    flex: 1;
+    text-align: center;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.metric-value {
+    font-size: 24px;
+    font-weight: bold;
+    margin: 8px 0;
+}
+
+/* Waveform visualization */
+.waveform-container {
+    height: 200px;
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+/* Spectrogram visualization */
+.spectrogram-container {
+    height: 300px;
+    background-color: white;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
