@@ -9,7 +9,21 @@ A robust speech recognition and natural language processing system that transcri
 [![NLTK](https://img.shields.io/badge/NLTK-yellow)]()
 [![scikit-learn](https://img.shields.io/badge/scikit--learn-orange)]()
 
-![System Overview](images/audio-transciption.png)
+<div align="center" style="padding: 20px; background: #f6f8fa; border-radius: 10px; margin: 20px 0;">
+ <div style="max-width: 800px; margin: auto;">
+<a href="https://www.youtube.com/watch?v=yFwk3fSHYM0" target="_blank">
+<div style="position: relative; display: inline-block; width: 100%; padding: 20px;">
+<img src="images/audio-transciption.png" alt="Watch the Video" style="width: 100%; border-radius: 8px; border: 2px solid #e1e4e8;">
+<div style="position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);">
+<img src="https://raw.githubusercontent.com/github/explore/master/topics/youtube/youtube.png" width="68">
+</div>
+<div style="position: absolute; bottom: 28px; right: 28px;">
+<img src="https://img.shields.io/badge/YouTube-%23FF0000.svg?style=for-the-badge&logo=YouTube&logoColor=white" height="28px">
+</div>
+</div>
+</a>
+</div>
+</div>
 
 ## 🚀 Technical Architecture
 
@@ -339,6 +353,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-Your Name - [anshkumar.info@gmail.com](mailto:anshkumar.info@gmail.com)
+Ansh Kumar - [anshkumar.info@gmail.com](mailto:anshkumar.info@gmail.com)
 
 ---
